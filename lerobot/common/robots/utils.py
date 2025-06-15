@@ -37,6 +37,12 @@ def make_robot_from_config(config: RobotConfig) -> Robot:
         from .so101_follower import SO101Follower
 
         return SO101Follower(config)
+    # ## --- ADDED SO101 END EFFECTOR ROBOT --- ##
+    elif config.type == "so101_follower_end_effector":
+        from .so101_follower.so101_follower_end_effector import SO101FollowerEndEffector
+
+        return SO101FollowerEndEffector(config)
+    # ## ---------------------- ##
     elif config.type == "lekiwi":
         from .lekiwi import LeKiwi
 

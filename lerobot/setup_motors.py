@@ -50,6 +50,7 @@ COMPATIBLE_DEVICES = [
     "so100_follower",
     "so100_leader",
     "so101_follower",
+    "so101_follower_end_effector",
     "so101_leader",
     "lekiwi",
 ]
