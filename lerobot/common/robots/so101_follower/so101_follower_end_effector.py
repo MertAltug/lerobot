@@ -157,7 +157,7 @@ class SO101FollowerEndEffector(SO101Follower):
 
         # Calculate inverse kinematics for the full pose
         target_joint_values_6dof = self.kinematics.ik(
-            dummy_joint_state, desired_ee_pos, position_only=False, frame=EE_FRAME
+            dummy_joint_state, desired_ee_pos, position_only=False, frame=EE_FRAME,max_iterations=20 , learning_rate=0.5
         )
 
         # We only care about the first 5 joint values from the result

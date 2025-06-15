@@ -27,7 +27,7 @@ class SO101FollowerEndEffectorConfig(SO101FollowerConfig):
     # This controls the speed of the teleoperation.
     # Positional steps are in meters, rotational steps are in radians.
     end_effector_step_sizes: dict = field(
-        default_factory=lambda: {"x": 0.01, "y": 0.01, "z": 0.001, "pitch": 0.01, "roll": 0.01}
+        default_factory=lambda: {"x": 0.5, "y": 0.5, "z": 0.5, "pitch": 1, "roll": 1}
     )
 
     # Maximum gripper position for clipping.

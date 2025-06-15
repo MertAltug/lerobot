@@ -18,6 +18,8 @@ from dataclasses import dataclass
 
 from ..config import TeleoperatorConfig
 
+from cv2 import aruco
+
 
 @TeleoperatorConfig.register_subclass("keyboard")
 @dataclass
@@ -30,3 +32,18 @@ class KeyboardTeleopConfig(TeleoperatorConfig):
 @dataclass
 class KeyboardEndEffectorTeleopConfig(KeyboardTeleopConfig):
     use_gripper: bool = True
+
+
+@TeleoperatorConfig.register_subclass("aruco_ee")
+@dataclass
+class ArucoEndEffectorTeleopConfig(KeyboardTeleopConfig):
+    # Set some defaults, based on our specific setup, probably needs changing
+    use_gripper: bool = True
+    camera: int = 0
+    camera_calibration_folder: str = "./calibration_values"
+    aruco_dictionary: int = aruco.DICT_6X6_50
+    marker_size: float = 0.0675
+    main_marker: int = 0
+    backup_marker: int = 1
+    bk_offset: float = 0.085
+
