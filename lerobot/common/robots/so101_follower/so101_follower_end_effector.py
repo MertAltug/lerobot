@@ -87,7 +87,11 @@ class SO101FollowerEndEffector(SO101Follower):
             raise DeviceNotConnectedError(f"{self} is not connected.")
 
         # Default to zero action if keys are missing
-        required_keys = ["delta_x", "delta_y", "delta_z", "delta_pitch", "delta_roll"]
+        required_keys = ["delta_x", "delta_y", "delta_z"]
+        if not self.config.position_only:
+            required_keys.append("delta_pitch")
+            required_keys.append("delta_roll")
+
         if not (isinstance(action, dict) and all(k in action for k in required_keys)):
             logger.warning(
                 "Expected action keys %s, got %s",
@@ -120,25 +124,28 @@ class SO101FollowerEndEffector(SO101Follower):
         desired_ee_translation = self.current_ee_pos[:3, 3] + delta_ee_pos
 
         # 2. Rotation
-        delta_pitch = action["delta_pitch"] * self.config.end_effector_step_sizes["pitch"]
-        delta_roll = action["delta_roll"] * self.config.end_effector_step_sizes["roll"]
+        desired_ee_rot = self.current_ee_pos[:3, :3]
+        if not self.config.position_only:
+            delta_pitch = action["delta_pitch"] * self.config.end_effector_step_sizes["pitch"]
+            delta_roll = action["delta_roll"] * self.config.end_effector_step_sizes["roll"]
 
-        # Create rotation matrices for pitch (Y) and roll (X) in the EE frame
-        cp = np.cos(delta_pitch)
-        sp = np.sin(delta_pitch)
-        cr = np.cos(delta_roll)
-        sr = np.sin(delta_roll)
+            # Create rotation matrices for pitch (Y) and roll (X) in the EE frame
+            cp = np.cos(delta_pitch)
+            sp = np.sin(delta_pitch)
+            cr = np.cos(delta_roll)
+            sr = np.sin(delta_roll)
 
-        rot_y_pitch = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
-        rot_x_roll = np.array([[1, 0, 0], [0, cr, -sr], [0, sr, cr]])
+            rot_y_pitch = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
+            rot_x_roll = np.array([[1, 0, 0], [0, cr, -sr], [0, sr, cr]])
 
-        # Post-multiply to apply intrinsic rotations: first roll, then pitch.
-        delta_rot = rot_x_roll @ rot_y_pitch
-        desired_ee_rot = self.current_ee_pos[:3, :3] @ delta_rot
+            # Post-multiply to apply intrinsic rotations: first roll, then pitch.
+            delta_rot = rot_x_roll @ rot_y_pitch
+            desired_ee_rot = self.current_ee_pos[:3, :3] @ delta_rot
 
         # Assemble the desired pose
         desired_ee_pos = np.eye(4)
-        desired_ee_pos[:3, :3] = desired_ee_rot
+        if not self.config.position_only:
+            desired_ee_pos[:3, :3] = desired_ee_rot
         desired_ee_pos[:3, 3] = desired_ee_translation
 
         if self.end_effector_bounds is not None:
@@ -157,7 +164,7 @@ class SO101FollowerEndEffector(SO101Follower):
 
         # Calculate inverse kinematics for the full pose
         target_joint_values_6dof = self.kinematics.ik(
-            dummy_joint_state, desired_ee_pos, position_only=False, frame=EE_FRAME,max_iterations=20 , learning_rate=0.5
+            dummy_joint_state, desired_ee_pos, position_only=self.config.position_only, frame=EE_FRAME,max_iterations=20 , learning_rate=0.5
         )
 
         # We only care about the first 5 joint values from the result

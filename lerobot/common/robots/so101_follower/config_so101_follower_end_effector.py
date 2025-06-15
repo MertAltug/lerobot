@@ -14,7 +14,7 @@ class SO101FollowerEndEffectorConfig(SO101FollowerConfig):
     """
     Configuration for the SO-101 Follower Arm with end-effector control.
     """
-
+    position_only = True
     # Default bounds for the end-effector position (in meters)
     end_effector_bounds: dict[str, list[float]] = field(
         default_factory=lambda: {
