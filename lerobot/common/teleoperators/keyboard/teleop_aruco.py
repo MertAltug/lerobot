@@ -332,9 +332,10 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
         self.current_reference = new_reference_frame
 
         # X, Y and Z are rotated in relation to the calculated values
-        delta_x = aruco_delta[2]
-        delta_y = aruco_delta[0]
-        delta_z = aruco_delta[1]
+        eps = 1e-3
+        delta_x = aruco_delta[2] if abs(aruco_delta[2]) > eps else 0
+        delta_y = aruco_delta[0] if abs(aruco_delta[0]) > eps else 0
+        delta_z = aruco_delta[1] if abs(aruco_delta[1]) > eps else 0
 
         # The angles need to be converted from radians to degrees
         delta_pitch = aruco_delta[3]

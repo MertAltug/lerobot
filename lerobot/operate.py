@@ -34,6 +34,7 @@ from lerobot.common.teleoperators.keyboard import KeyboardEndEffectorTeleop , Ke
 robot_config = SO101FollowerEndEffectorConfig(
     port="/dev/ttyACM0",
     id="follower_0_ee1",
+    position_only=True
 )
 
 # teleop_config = KeyboardEndEffectorTeleopConfig(
