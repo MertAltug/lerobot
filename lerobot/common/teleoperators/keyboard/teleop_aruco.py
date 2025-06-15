@@ -111,7 +111,11 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
             ret, self.current_state, self.current_reference = self.calculate_state(initial_frame)
 
         state_size = self.current_state.shape[0]
-        self.delta_buffer = np.zeros((5, state_size))
+        buffer_size = 10
+        self.delta_buffer = np.zeros((buffer_size, state_size))
+        self.position_buffer = np.zeros((buffer_size, state_size))
+        for i in range(buffer_size):
+            self.position_buffer[i] = self.current_state.copy()
 
         self.display_window = "Aruco Tracker"
         cv2.namedWindow(self.display_window, cv2.WINDOW_GUI_NORMAL)
@@ -197,6 +201,13 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
             roll = beta
 
         return flex, roll
+ 
+    def get_rotated_vector(self, source, rvec):
+        rot_mat, _ = cv2.Rodrigues(rvec)
+
+        rotated_vector = np.matmul(rot_mat, source)
+
+        return rotated_vector
 
     # Compute current State [x, y, z, flex, roll] based on the frame and camera parameters
     def calculate_state(self, frame):
@@ -215,6 +226,9 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
 
         position = tvec[:,0]
 
+        # Correct position acording to the plane offset to the point of rotation
+        normal = self.get_rotated_vector(np.array([0,0,1]), rvec)
+        position = position - (self.config.bk_offset/2)*normal
 
         x = position[0]
         y = position[1]*(-1)
@@ -223,10 +237,6 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
         flex, roll = self.wrist_angles(rvec, backup_translation)
     
         if backup_translation:
-            l = self.config.bk_offset / 2
-            alpha = np.pi/2 - flex
-            y = y - l*(np.sin(alpha) + np.cos(alpha))
-            z = z + l*(np.sin(alpha) - np.cos(alpha))
             flex = flex - np.pi/2
 
         state = np.array([x, y, z, flex, roll])
@@ -255,6 +265,28 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
 
         return weighted_delta, new_position, new_delta_vector, new_reference    
 
+    def delta_from_position_buffer(self, frame, position_buffer, last_marker_reference, eta=0.5):
+        retval, new_position, new_reference = self.calculate_state(frame)
+
+        last_position = position_buffer[0].copy()
+        if new_reference != last_marker_reference or retval == -1:
+            new_position = last_position
+
+        buffer_size = position_buffer.shape[0]
+        new_buffer = np.zeros_like(position_buffer)
+        new_buffer[1:buffer_size] = position_buffer[0:buffer_size-1]
+
+        new_buffer = eta*new_buffer
+
+        sum_of_weights = ((1 - eta**buffer_size) / (1 - eta))
+
+        weighted_position = (new_position + new_buffer.sum()) / sum_of_weights
+
+        delta = weighted_position - last_position
+        new_buffer[0] = weighted_position
+
+        return delta, new_buffer, new_reference
+
     def get_action(self) -> dict[str, Any]:
         if not self.is_connected:
             raise DeviceNotConnectedError(
@@ -273,6 +305,8 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
         aruco_delta, new_position, new_delta_buffer, new_reference_frame = self.smoothed_position_deltas(
             frame, self.current_state, self.current_reference, self.delta_buffer, eta=0.8
         )
+
+        # aruco_delta, new_buffer, new_reference_frame = self.delta_from_position_buffer(frame, self.position_buffer, self.current_reference, eta=0.9)
 
         corner_points = self.get_marker_corners(frame, self.config.main_marker)
         corner_points_bk = self.get_marker_corners(frame, self.config.backup_marker)
@@ -294,6 +328,7 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
         # Update the teleoperator state:
         self.current_state = new_position
         self.delta_buffer = new_delta_buffer
+        # self.position_buffer = new_buffer
         self.current_reference = new_reference_frame
 
         # X, Y and Z are rotated in relation to the calculated values

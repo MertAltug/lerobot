@@ -60,12 +60,12 @@ print("Robot Connected...")
 teleop_device.connect()
 print("Teleoperator connected...")
 
-
 def teleop_loop(
     teleop: Teleoperator, robot: Robot, fps: int, display_data: bool = False, duration: float | None = None
 ):
     display_len = max(len(key) for key in robot.action_features)
     start = time.perf_counter()
+    current_position = np.zeros(5)
     while True:
         loop_start = time.perf_counter()
         action = teleop.get_action()
@@ -81,6 +81,7 @@ def teleop_loop(
                     rr.log(f"action_{act}", rr.Scalar(val))
 
         robot.send_action(action)
+        robot.reset()
         dt_s = time.perf_counter() - loop_start
         busy_wait(1 / fps - dt_s)
 
@@ -89,16 +90,25 @@ def teleop_loop(
         print("\n" + "-" * (display_len + 10))
         print(f"{'NAME':<{display_len}} | {'NORM':>7}")
         for motor, value in action.items():
-            print(f"{motor:<{display_len}} | {value:>7.2f}")
+            print(f"{motor:<{display_len}} | {value:>7.5f}")
+            if motor == "delta_x":
+                current_position[0] += value
+            elif motor == "delta_y":
+                current_position[1] += value
+            elif motor == "delta_z":
+                current_position[2] += value 
+                
         print(f"\ntime: {loop_s * 1e3:.2f}ms ({1 / loop_s:.0f} Hz)")
+        print(f"\nCurrent Position: {current_position}")
+        # print(f"End effector position:\n {robot.current_ee_pos}")
 
         if duration is not None and time.perf_counter() - start >= duration:
             return
 
-        move_cursor_up(len(action) + 5)
+        # move_cursor_up(len(action) + 7)
 
 try:
-    teleop_loop(teleop_device, robot, 30)
+    teleop_loop(teleop_device, robot, 30, display_data=True)
 except KeyboardInterrupt:
     pass
 finally:
