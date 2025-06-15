@@ -2,3 +2,5 @@ from .config_so101_follower import SO101FollowerConfig
 from .so101_follower import SO101Follower
 from .config_so101_follower_end_effector import SO101FollowerEndEffectorConfig
 from .so101_follower_end_effector import SO101FollowerEndEffector
+from .config_so101_follower_ee_position_only import SO101FollowerEEPositionOnlyConfig
+from .so101_follower_ee_position_only import SO101FollowerEEPositionOnly

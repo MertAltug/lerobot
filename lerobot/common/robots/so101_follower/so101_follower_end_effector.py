@@ -117,7 +117,7 @@ class SO101FollowerEndEffector(SO101Follower):
             [
                 action["delta_x"] * self.config.end_effector_step_sizes["x"],
                 action["delta_y"] * self.config.end_effector_step_sizes["y"],
-                action["delta_z"] * self.config.end_effector_step_sizes["z"],
+                -action["delta_z"] * self.config.end_effector_step_sizes["z"],
             ],
             dtype=np.float32,
         )
@@ -170,7 +170,7 @@ class SO101FollowerEndEffector(SO101Follower):
         # We only care about the first 5 joint values from the result
         target_joint_values_in_degrees = target_joint_values_6dof[:5]
 
-        target_joint_values_in_degrees = np.clip(target_joint_values_in_degrees, -180.0, 180.0)
+        target_joint_values_in_degrees = np.clip(target_joint_values_in_degrees, -90, 90.0)
 
         # Prepare joint space action for the 5 arm motors
         joint_action = {

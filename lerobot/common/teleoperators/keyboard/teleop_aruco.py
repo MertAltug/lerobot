@@ -194,11 +194,13 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
 
         alpha, beta, gamma = self.rotation_matrix_to_angles(rot_mat)
     
-        flex = gamma
+        # flex = gamma
+        flex = beta
         roll = alpha
 
         if backup_marker:
             roll = beta
+            flex = alpha
 
         return flex, roll
  
@@ -359,11 +361,13 @@ class ArucoEndEffectorTeleop(KeyboardTeleop):
             "delta_x": delta_x,
             "delta_y": delta_y,
             "delta_z": delta_z,
-            "delta_pitch": delta_pitch,
-            "delta_roll": delta_roll,
         }
 
         if self.config.use_gripper:
             action_dict["gripper"] = gripper_action
+
+        if not self.config.position_only:
+            action_dict["delta_pitch"] = delta_pitch
+            action_dict["delta_roll"] = delta_roll
 
         return action_dict

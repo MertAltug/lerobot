@@ -28,14 +28,20 @@ from lerobot.common.utils.utils import init_logging, move_cursor_up
 from lerobot.common.utils.visualization_utils import _init_rerun
 
 from lerobot.common.teleoperators.so101_leader import SO101LeaderConfig, SO101Leader
-from lerobot.common.robots.so101_follower import SO101FollowerConfig, SO101Follower , SO101FollowerEndEffector ,SO101FollowerEndEffectorConfig
+from lerobot.common.robots.so101_follower import SO101FollowerConfig, SO101Follower , SO101FollowerEndEffector, SO101FollowerEEPositionOnly, SO101FollowerEndEffectorConfig, SO101FollowerEEPositionOnlyConfig
 from lerobot.common.teleoperators.keyboard import KeyboardEndEffectorTeleop , KeyboardEndEffectorTeleopConfig, ArucoEndEffectorTeleopConfig, ArucoEndEffectorTeleop
 
 robot_config = SO101FollowerEndEffectorConfig(
     port="/dev/ttyACM0",
     id="follower_0_ee1",
-    position_only=True
+    position_only=False
 )
+
+# robot_config = SO101FollowerEEPositionOnlyConfig(
+#     port="/dev/ttyACM0",
+#     id="follower_0_ee1",
+#     position_only=True
+# )
 
 # teleop_config = KeyboardEndEffectorTeleopConfig(
 #     id="teleop_keyboard_ee",
@@ -43,7 +49,8 @@ robot_config = SO101FollowerEndEffectorConfig(
 
 teleop_config = ArucoEndEffectorTeleopConfig(
     id="teleop_aruco_ee",
-    camera_calibration_folder = os.getcwd() + "/calibration_values/"
+    camera_calibration_folder = os.getcwd() + "/calibration_values/",
+    position_only = False
 )
 
 robot = SO101FollowerEndEffector(robot_config)

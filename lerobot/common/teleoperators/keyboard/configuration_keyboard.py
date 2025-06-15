@@ -46,4 +46,5 @@ class ArucoEndEffectorTeleopConfig(KeyboardTeleopConfig):
     main_marker: int = 0
     backup_marker: int = 1
     bk_offset: float = 0.085
+    position_only: bool = False
 

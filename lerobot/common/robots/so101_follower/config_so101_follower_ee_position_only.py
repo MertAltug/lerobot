@@ -8,7 +8,7 @@ from lerobot.common.robots.config import RobotConfig
 from lerobot.common.robots.so101_follower.config_so101_follower import SO101FollowerConfig
 
 
-@RobotConfig.register_subclass("so101_follower_end_effector")
+@RobotConfig.register_subclass("so101_follower_ee_position_only")
 @dataclass
 class SO101FollowerEEPositionOnlyConfig(SO101FollowerConfig):
     """
